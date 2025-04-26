@@ -12,10 +12,26 @@ model User {
   id            String         @id @default(cuid())
   name          String         @unique
   password      String
+  exercises     Exercise[]
   refreshTokens RefreshToken[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   deletedAt     DateTime?
+}
+
+model Exercise {
+  id          String    @id @default(cuid())
+  name        String
+  description String
+  difficulty  Int       @db.SmallInt
+  isPublic    Boolean   @default(false)
+  creator     User      @relation(fields: [creatorId], references: [id])
+  creatorId   String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  @@index([creatorId])
 }
 
 model RefreshToken {

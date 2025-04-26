@@ -126,6 +126,18 @@ exports.Prisma.UserScalarFieldEnum = {
   deletedAt: 'deletedAt'
 };
 
+exports.Prisma.ExerciseScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  difficulty: 'difficulty',
+  isPublic: 'isPublic',
+  creatorId: 'creatorId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  deletedAt: 'deletedAt'
+};
+
 exports.Prisma.RefreshTokenScalarFieldEnum = {
   id: 'id',
   token: 'token',
@@ -156,6 +168,7 @@ exports.Prisma.NullsOrder = {
 
 exports.Prisma.ModelName = {
   User: 'User',
+  Exercise: 'Exercise',
   RefreshToken: 'RefreshToken'
 };
 

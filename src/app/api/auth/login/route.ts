@@ -1,63 +1,38 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@/generated/prisma';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import { AuthService } from '@/services/auth.service';
 import { z } from 'zod';
 
-const prisma = new PrismaClient();
+const authService = new AuthService();
 
 // Validation schema for login
 const loginSchema = z.object({
   username: z.string(),
-  password: z.string()
+  password: z.string(),
+  deviceInfo: z.string().optional()
 });
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    const { username, password, deviceInfo } = loginSchema.parse(body);
     
-    // Validate input
-    const { username, password } = loginSchema.parse(body);
-    
-    // Find user
-    const user = await prisma.user.findUnique({
-      where: { name: username }
-    });
-    
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
-      );
-    }
-    
-    // Verify password
-    const isValidPassword = await bcrypt.compare(password, user.password);
-    
-    if (!isValidPassword) {
-      return NextResponse.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
-      );
-    }
-    
-    // Generate JWT token
-    const token = jwt.sign(
-      { userId: user.id, username: user.name },
-      process.env.JWT_SECRET!,
-      { expiresIn: '1h' }
-    );
-    
-    return NextResponse.json({
-      username: user.name,
-      token
-    });
+    const result = await authService.login(username, password, deviceInfo);
+    return NextResponse.json(result);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid input', details: error.errors },
         { status: 400 }
       );
+    }
+    
+    if (error instanceof Error) {
+      if (error.message === 'Invalid credentials') {
+        return NextResponse.json(
+          { error: error.message },
+          { status: 401 }
+        );
+      }
     }
     
     console.error('Login error:', error);

@@ -19,15 +19,23 @@ export class ExerciseService {
       throw new Error('User not found');
     }
     
-    return prisma.exercise.create({
+    const exercise = await prisma.exercise.create({
       data: {
         name,
         description,
         difficulty,
         isPublic,
         creatorId
+      },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        difficulty: true,
+        isPublic: true
       }
     });
+    return exercise;
   }
 
   async updateExercise(
@@ -65,14 +73,21 @@ export class ExerciseService {
     // Update the exercise
     return prisma.exercise.update({
       where: { id },
-      data: updateData
+      data: updateData,
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        difficulty: true,
+        isPublic: true
+      }
     });
   }
 
   async deleteExercise(exerciseId: string, userId: string) {
     // Get the exercise
     const exercise = await prisma.exercise.findUnique({
-      where: { id: exerciseId }
+      where: { id: exerciseId, deletedAt: null }
     });
 
     if (!exercise) {
@@ -87,7 +102,14 @@ export class ExerciseService {
     // Soft delete the exercise
     return prisma.exercise.update({
       where: { id: exerciseId },
-      data: { deletedAt: new Date() }
+      data: { deletedAt: new Date() },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        difficulty: true,
+        isPublic: true
+      }
     });
   }
 } 

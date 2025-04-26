@@ -1,29 +1,33 @@
 import { NextResponse } from 'next/server';
 import { ExerciseService } from '@/services/exercise.service';
+import { getUserIdFromHeader } from '@/utils/auth';
 import { z } from 'zod';
 
 const exerciseService = new ExerciseService();
 
 // Validation schema for updating an exercise
 const updateExerciseSchema = z.object({
-  name: z.string().min(1).optional(),
-  description: z.string().optional(),
+  name: z.string().min(3).optional(),
+  description: z.string().min(10).optional(),
   difficulty: z.number().min(1).max(5).optional()
-});
+}).refine(
+  (data) => data.name !== undefined || data.description !== undefined || data.difficulty !== undefined,
+  { message: "At least one field (name, description, or difficulty) must be provided" }
+);
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params;
     const body = await request.json();
     const { name, description, difficulty } = updateExerciseSchema.parse(body);
     
-    // TODO: Get userId from JWT token
-    const userId = 'temp-user-id';
+    const userId = getUserIdFromHeader(request);
     
     const exercise = await exerciseService.updateExercise(
-      params.id,
+      id,
       userId,
       name,
       description,
@@ -41,10 +45,16 @@ export async function PUT(
     }
     
     if (error instanceof Error) {
-      if (error.message == 'Exercise not found' || error.message == 'Exercise not found') {
+      if (error.message === 'Exercise not found' || error.message === 'Not authorized to modify this exercise') {
         return NextResponse.json(
           { error: 'Exercise not found' },
           { status: 404 }
+        );
+      }
+      if (error.message === 'User ID not found in request') {
+        return NextResponse.json(
+          { error: error.message },
+          { status: 401 }
         );
       }
     }
@@ -58,13 +68,13 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    // TODO: Get userId from JWT token
-    const userId = 'temp-user-id';
+    const { id } = await context.params;
+    const userId = getUserIdFromHeader(request);
     
-    await exerciseService.deleteExercise(params.id, userId);
+    await exerciseService.deleteExercise(id, userId);
     
     return new NextResponse(null, { status: 204 });
   } catch (error) {
@@ -74,6 +84,12 @@ export async function DELETE(
         return NextResponse.json(
           { error: 'Exercise not found' },
           { status: 404 }
+        );
+      }
+      if (error.message === 'User ID not found in request') {
+        return NextResponse.json(
+          { error: error.message },
+          { status: 401 }
         );
       }
     }

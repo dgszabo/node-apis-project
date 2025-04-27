@@ -46,6 +46,11 @@ npm run prisma:push
 npm run dev
 ```
 
+6. View the DB structure and content:
+```bash
+npx prisma studio
+```
+
 The APIs will be available at `http://localhost:3000/api`
 
 ## API Endpoints
@@ -85,7 +90,7 @@ The APIs will be available at `http://localhost:3000/api`
 
 To run all tests:
 ```bash
-npm test
+npm run test
 ```
 
 To run tests in watch mode:

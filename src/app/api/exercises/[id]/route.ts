@@ -15,6 +15,41 @@ const updateExerciseSchema = z.object({
   { message: "At least one field (name, description, or difficulty) must be provided" }
 );
 
+export async function GET(
+  request: Request,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await context.params;
+    const userId = getUserIdFromHeader(request);
+    
+    const exercise = await exerciseService.getExercise(id, userId);
+    
+    return NextResponse.json(exercise);
+  } catch (error) {
+    console.error('Get exercise error:', error);
+    if (error instanceof Error) {
+      if (error.message === 'Exercise not found' || error.message === 'Not authorized to view this exercise') {
+        return NextResponse.json(
+          { error: 'Exercise not found' },
+          { status: 404 }
+        );
+      }
+      if (error.message === 'User ID not found in request') {
+        return NextResponse.json(
+          { error: error.message },
+          { status: 401 }
+        );
+      }
+    }
+
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
 export async function PUT(
   request: Request,
   context: { params: Promise<{ id: string }> }

@@ -112,4 +112,81 @@ export class ExerciseService {
       }
     });
   }
+
+  async getExercise(id: string, userId: string) {
+    const exercise = await prisma.exercise.findUnique({
+      where: { id }
+    });
+
+    if (!exercise) {
+      throw new Error('Exercise not found');
+    }
+
+    // Check if user has permission to view
+    if (!exercise.isPublic && exercise.creatorId !== userId) {
+      throw new Error('Not authorized to view this exercise');
+    }
+
+    return prisma.exercise.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        difficulty: true,
+        isPublic: true
+      }
+    });
+  }
+
+  async listExercises(
+    userId: string,
+    filters?: {
+      name?: string;
+      description?: string;
+      difficulty?: number;
+    },
+    sortBy?: 'difficulty'
+  ) {
+    // Build the where clause
+    const where = {
+      deletedAt: null,
+      OR: [
+        { isPublic: true },
+        { creatorId: userId }
+      ],
+      ...(filters?.name && {
+        name: {
+          contains: filters.name,
+          mode: 'insensitive' as const
+        }
+      }),
+      ...(filters?.description && {
+        description: {
+          contains: filters.description,
+          mode: 'insensitive' as const
+        }
+      }),
+      ...(filters?.difficulty && {
+        difficulty: filters.difficulty
+      })
+    };
+
+    // Build the orderBy clause
+    const orderBy = sortBy === 'difficulty' 
+      ? { difficulty: 'asc' as const }
+      : undefined;
+
+    return prisma.exercise.findMany({
+      where,
+      orderBy,
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        difficulty: true,
+        isPublic: true
+      }
+    });
+  }
 } 

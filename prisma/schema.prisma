@@ -14,24 +14,44 @@ model User {
   password      String
   exercises     Exercise[]
   refreshTokens RefreshToken[]
+  userExercises UserExercise[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   deletedAt     DateTime?
 }
 
 model Exercise {
-  id          String    @id @default(cuid())
+  id          String         @id @default(cuid())
   name        String
   description String
-  difficulty  Int       @db.SmallInt
-  isPublic    Boolean   @default(false)
-  creator     User      @relation(fields: [creatorId], references: [id])
+  difficulty  Int           @db.SmallInt
+  isPublic    Boolean       @default(false)
+  creator     User          @relation(fields: [creatorId], references: [id])
   creatorId   String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  userExercises UserExercise[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
   deletedAt   DateTime?
 
   @@index([creatorId])
+}
+
+model UserExercise {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  exercise  Exercise @relation(fields: [exerciseId], references: [id])
+  exerciseId String
+  isSaved   Boolean  @default(false)
+  isFavorited Boolean @default(false)
+  rating    Int?     @db.SmallInt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  @@unique([userId, exerciseId])
+  @@index([userId])
+  @@index([exerciseId])
 }
 
 model RefreshToken {

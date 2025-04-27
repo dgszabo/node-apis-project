@@ -134,8 +134,32 @@ export class ExerciseService {
         name: true,
         description: true,
         difficulty: true,
-        isPublic: true
-      }
+        isPublic: true,
+        userExercises: {
+          select: {
+            isSaved: true,
+            isFavorited: true,
+            rating: true,
+          },
+        },
+      },
+    }).then(exercise => {
+      if (!exercise) return null;
+
+      const saveCount = exercise.userExercises.filter(ue => ue.isSaved).length;
+      const favoriteCount = exercise.userExercises.filter(ue => ue.isFavorited).length;
+      const ratings = exercise.userExercises.map(ue => ue.rating).filter((r): r is number => r !== null);
+      const averageRating = ratings.length > 0 
+        ? ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length 
+        : null;
+
+      const { userExercises, ...rest } = exercise;
+      return {
+        ...rest,
+        saveCount,
+        favoriteCount,
+        averageRating,
+      };
     });
   }
 
@@ -185,8 +209,32 @@ export class ExerciseService {
         name: true,
         description: true,
         difficulty: true,
-        isPublic: true
-      }
-    });
+        isPublic: true,
+        userExercises: {
+          select: {
+            isSaved: true,
+            isFavorited: true,
+            rating: true,
+          },
+        },
+      },
+    }).then(exercises => 
+      exercises.map(exercise => {
+        const saveCount = exercise.userExercises.filter(ue => ue.isSaved).length;
+        const favoriteCount = exercise.userExercises.filter(ue => ue.isFavorited).length;
+        const ratings = exercise.userExercises.map(ue => ue.rating).filter((r): r is number => r !== null);
+        const averageRating = ratings.length > 0 
+          ? ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length 
+          : null;
+
+        const { userExercises, ...rest } = exercise;
+        return {
+          ...rest,
+          saveCount,
+          favoriteCount,
+          averageRating,
+        };
+      })
+    );
   }
 } 

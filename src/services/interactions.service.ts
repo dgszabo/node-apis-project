@@ -1,8 +1,12 @@
 import { PrismaClient } from '@/generated/prisma';
 
-const prisma = new PrismaClient();
-
 export class InteractionsService {
+  private prisma: PrismaClient;
+
+  constructor(prisma: PrismaClient = new PrismaClient()) {
+    this.prisma = prisma;
+  }
+
   async updateInteraction(
     userId: string, 
     exerciseId: string, 
@@ -12,11 +16,11 @@ export class InteractionsService {
       rating?: number | null;
     }
   ) {
-    const exercise = await prisma.exercise.findUnique({
-      where: { id: exerciseId, deletedAt: null, isPublic: true },
+    const exercise = await this.prisma.exercise.findUnique({
+      where: { id: exerciseId },
     });
 
-    if (!exercise) {
+    if (!exercise || exercise.deletedAt || !exercise.isPublic) {
       throw new Error("Exercise not found");
     }
 
@@ -24,7 +28,7 @@ export class InteractionsService {
       throw new Error("Cannot interact with your own exercise");
     }
 
-    const userExercise = await prisma.userExercise.upsert({
+    const userExercise = await this.prisma.userExercise.upsert({
       where: {
         userId_exerciseId: {
           userId,

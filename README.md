@@ -10,6 +10,7 @@ A RESTful API built with Next.js for managing exercises and user authentication.
 - 🔄 Refresh token rotation
 - 🛡️ Secure password hashing
 - 📝 Input validation
+- 👥 User exercise interactions (save, favorite, rate)
 
 ## Prerequisites
 
@@ -64,6 +65,11 @@ The APIs will be available at `http://localhost:3000/api`
 - `PUT /api/exercises/{id}` - Update exercise
 - `DELETE /api/exercises/{id}` - Delete exercise
 
+### UserExercises (Interactions)
+
+- `POST /api/exercises/{id}/interactions` - Create/Update user exercise interactions
+  - Body: `{ "isSaved": true, "isFavorited": true, "rating": 4 }`
+
 ## Development
 
 - Prisma ORM
@@ -71,3 +77,18 @@ The APIs will be available at `http://localhost:3000/api`
 - Next.js API routes
 - JWT authentication
 - PostgreSQL database
+- Jest tests
+
+## Testing
+
+### Running Tests
+
+To run all tests:
+```bash
+npm test
+```
+
+To run tests in watch mode:
+```bash
+npm run test:watch
+```

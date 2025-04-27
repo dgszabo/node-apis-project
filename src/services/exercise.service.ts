@@ -1,8 +1,12 @@
 import { PrismaClient } from '@/generated/prisma';
 
-const prisma = new PrismaClient();
-
 export class ExerciseService {
+  private prisma: PrismaClient;
+
+  constructor(prisma: PrismaClient = new PrismaClient()) {
+    this.prisma = prisma;
+  }
+
   async createExercise(
     name: string,
     description: string,
@@ -11,7 +15,7 @@ export class ExerciseService {
     creatorId: string
   ) {
     // Validate if user exists
-    const user = await prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: { id: creatorId }
     });
 
@@ -19,7 +23,7 @@ export class ExerciseService {
       throw new Error('User not found');
     }
     
-    const exercise = await prisma.exercise.create({
+    const exercise = await this.prisma.exercise.create({
       data: {
         name,
         description,
@@ -46,7 +50,7 @@ export class ExerciseService {
     difficulty?: number
   ) {
     // Get the exercise
-    const exercise = await prisma.exercise.findUnique({
+    const exercise = await this.prisma.exercise.findUnique({
       where: { id }
     });
 
@@ -71,7 +75,7 @@ export class ExerciseService {
     if (difficulty) updateData.difficulty = difficulty;
 
     // Update the exercise
-    return prisma.exercise.update({
+    return this.prisma.exercise.update({
       where: { id },
       data: updateData,
       select: {
@@ -86,7 +90,7 @@ export class ExerciseService {
 
   async deleteExercise(exerciseId: string, userId: string) {
     // Get the exercise
-    const exercise = await prisma.exercise.findUnique({
+    const exercise = await this.prisma.exercise.findUnique({
       where: { id: exerciseId, deletedAt: null }
     });
 
@@ -100,7 +104,7 @@ export class ExerciseService {
     }
 
     // Soft delete the exercise
-    return prisma.exercise.update({
+    return this.prisma.exercise.update({
       where: { id: exerciseId },
       data: { deletedAt: new Date() },
       select: {
@@ -114,7 +118,7 @@ export class ExerciseService {
   }
 
   async getExercise(id: string, userId: string) {
-    const exercise = await prisma.exercise.findUnique({
+    const exercise = await this.prisma.exercise.findUnique({
       where: { id }
     });
 
@@ -127,7 +131,7 @@ export class ExerciseService {
       throw new Error('Not authorized to view this exercise');
     }
 
-    return prisma.exercise.findUnique({
+    return this.prisma.exercise.findUnique({
       where: { id },
       select: {
         id: true,
@@ -201,7 +205,7 @@ export class ExerciseService {
       ? { difficulty: 'asc' as const }
       : undefined;
 
-    return prisma.exercise.findMany({
+    return this.prisma.exercise.findMany({
       where,
       orderBy,
       select: {

@@ -25,11 +25,11 @@ export async function POST(request: Request) {
     }
     
     if (error instanceof Error) {
-      if (error.message === 'Invalid refresh token' || 
+      if (error.message === 'Refresh token invalid' ||
           error.message === 'Refresh token has expired or been revoked' ||
           error.message === 'User not found') {
         return NextResponse.json(
-          { error: error.message },
+          { error: 'Invalid refresh token' },
           { status: 401 }
         );
       }

@@ -2,12 +2,16 @@ import { PrismaClient } from '@/generated/prisma';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-const prisma = new PrismaClient();
-
 export class AuthService {
+  private prisma: PrismaClient;
+
+  constructor(prisma: PrismaClient = new PrismaClient()) {
+    this.prisma = prisma;
+  }
+
   async signup(username: string, password: string) {
     // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
+    const existingUser = await this.prisma.user.findUnique({
       where: { name: username }
     });
     
@@ -19,7 +23,7 @@ export class AuthService {
     const hashedPassword = await bcrypt.hash(password, 10);
     
     // Create user
-    const user = await prisma.user.create({
+    const user = await this.prisma.user.create({
       data: {
         name: username,
         password: hashedPassword
@@ -31,7 +35,7 @@ export class AuthService {
 
   async login(username: string, password: string, deviceInfo?: string) {
     // Find user
-    const user = await prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: { name: username }
     });
     
@@ -65,13 +69,13 @@ export class AuthService {
     expiresAt.setDate(expiresAt.getDate() + 30);
 
     // Revoke all previous refersh tokens for user
-    await prisma.refreshToken.updateMany({
+    await this.prisma.refreshToken.updateMany({
       where: { userId: user.id, isRevoked: false },
       data: { isRevoked: true }
     });
 
     // Store refresh token in database
-    await prisma.refreshToken.create({
+    await this.prisma.refreshToken.create({
       data: {
         token: refreshToken,
         userId: user.id,
@@ -89,7 +93,7 @@ export class AuthService {
 
   async refresh(refreshToken: string) {
     // Find refresh token in database
-    const tokenRecord = await prisma.refreshToken.findUnique({
+    const tokenRecord = await this.prisma.refreshToken.findUnique({
       where: { token: refreshToken }
     });
     
@@ -98,7 +102,7 @@ export class AuthService {
     }
 
     // Get user
-    const user = await prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: { id: tokenRecord.userId }
     });
 
